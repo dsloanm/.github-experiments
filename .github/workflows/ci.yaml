@@ -35,6 +35,13 @@ jobs:
         with:
           node-version: lts/*
       - run: npm install -D @commitlint/cli @commitlint/config-conventional
+      - run: |
+          if [ ! -f .commitlintrc.yml ]; then
+            cat > .commitlintrc.yml << 'EOF'
+            extends:
+              - '@commitlint/config-conventional'
+            EOF
+          fi
       - run: >-
           npx commitlint
           --from ${{ github.event.pull_request.base.sha }}
