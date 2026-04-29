@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      setup-commands:
+        description: Commands to install repo-specific tools
+        type: string
+        default: ""
+      run-test:
+        type: boolean
+        default: true
+
+jobs:
+  inclusive-naming-check:
+    name: Inclusive naming check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: get-woke/woke-action@v0
+        with:
+          fail-on-error: true
+
+  commitlint:
+    name: Commit lint
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: npm install -D @commitlint/cli @commitlint/config-conventional
+      - run: >-
+          npx commitlint
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+          --verbose
+
+  check:
+    name: Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: charmed-hpc/.github/.github/actions/setup-just@main
+      - if: inputs.setup-commands != ''
+        run: ${{ inputs.setup-commands }}
+      - run: just check
+
+  test:
+    name: Test
+    if: ${{ inputs.run-test }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: charmed-hpc/.github/.github/actions/setup-just@main
+      - if: inputs.setup-commands != ''
+        run: ${{ inputs.setup-commands }}
+      - run: just test
