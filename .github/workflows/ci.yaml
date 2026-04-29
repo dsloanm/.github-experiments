@@ -37,10 +37,7 @@ jobs:
       - run: npm install -D @commitlint/cli @commitlint/config-conventional
       - run: |
           if [ ! -f .commitlintrc.yml ]; then
-            cat > .commitlintrc.yml << 'EOF'
-            extends:
-              - '@commitlint/config-conventional'
-            EOF
+            echo "extends: ['@commitlint/config-conventional']" > .commitlintrc.yml
           fi
       - run: >-
           npx commitlint
